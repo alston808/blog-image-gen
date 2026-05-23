@@ -1,19 +1,14 @@
-import os
-import http.server
-import socketserver
+from fastapi import FastAPI, Header, HTTPException
+import fal_client
 
-from http import HTTPStatus
+app = FastAPI()
 
-
-class Handler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(HTTPStatus.OK)
-        self.end_headers()
-        msg = 'Hello! you requested %s' % (self.path)
-        self.wfile.write(msg.encode())
-
-
-port = int(os.getenv('PORT', 80))
-print('Listening on port %s' % (port))
-httpd = socketserver.TCPServer(('', port), Handler)
-httpd.serve_forever()
+@app.post("/generate")
+async def generate_image(text: str, x_api_key: str = Header(...)):
+    if x_api_key != "DIGITALOCEAN_API_KEY":
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    # Trigger the model
+    handler = fal_client.submit("fal-ai/flux/schnell", arguments={"prompt": text})
+    result = handler.get()
+    return {"image_url": result['images'][0]['url']}
