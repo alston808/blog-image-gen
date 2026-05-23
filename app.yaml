@@ -10,12 +10,13 @@ services:
   build_command: pip install -r requirements.txt
   run_command: uvicorn app:app --host 0.0.0.0 --port 8080
   http_port: 8080
-  health_check:
-    path: /health
   env:
-    - key: FAL_KEY
+    - key: DO_INFERENCE_ENDPOINT
       scope: RUN_TIME
-      value: ${FAL_KEY}
+      value: ${DO_INFERENCE_ENDPOINT}
+    - key: DO_INFERENCE_TOKEN
+      scope: RUN_TIME
+      value: ${DO_INFERENCE_TOKEN}
     - key: CLI_TOKEN
       scope: RUN_TIME
       value: ${CLI_TOKEN}
