@@ -1,9 +1,9 @@
 import click
 import requests
 
-# Set this environment variable in your local ~/.bashrc or ~/.zshrc
-CLI_TOKEN = "DIGITALOCEAN_API_KEY"
-API_URL = "https://blog-image-gen.ondigitalocean.app/generate"
+# Use your own defined secret token
+CLI_TOKEN = "my-super-secret-123" 
+API_URL = "https://[YOUR_LIVE_URL].ondigitalocean.app/generate"
 
 @click.command()
 @click.argument('file_path', type=click.Path(exists=True))
@@ -13,14 +13,14 @@ def run(file_path):
 
     response = requests.post(
         API_URL,
-        json={"text": text},
-        headers={"X-API-Key": DIGITALOCEAN_API_KEY}
+        params={"prompt": text},
+        headers={"X-API-Key": CLI_TOKEN}
     )
     
     if response.status_code == 200:
         click.echo(f"Success! Image URL: {response.json()['image_url']}")
     else:
-        click.echo(f"Failed: {response.text}")
+        click.echo(f"Error {response.status_code}: {response.text}")
 
 if __name__ == '__main__':
     run()
