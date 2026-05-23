@@ -4,23 +4,26 @@ from openai import OpenAI
 
 app = FastAPI()
 
-# DigitalOcean Inference Endpoint
-# Set AGENT_ENDPOINT in App Platform Env Vars
+# Initialize the client with the DO Inference Base URL
 client = OpenAI(
-    base_url=os.getenv("DO_INFERENCE_ENDPOINT") + "/api/v1/",
-    api_key=os.getenv("DO_INFERENCE_TOKEN")
+    base_url="https://inference.do-ai.run/v1",
+    api_key=os.getenv("DO_INFERENCE_TOKEN") # Your Model Access Key
 )
 
-@app.post("/generate-header")
-async def generate_header(prompt: str, x_api_key: str = Header(...)):
+@app.post("/generate")
+async def generate_image(text: str, x_api_key: str = Header(...)):
+    # Validate your internal CLI token
     if x_api_key != os.getenv("CLI_TOKEN"):
         raise HTTPException(status_code=403, detail="Unauthorized")
     
-    # Generate image using DO Inference Engine
+    # Generate image using a supported model like stable-diffusion-3.5-large
     response = client.images.generate(
-        model="dall-e-3", # Use your catalog-supported model
-        prompt=f"Absurdist digital painting style: {prompt}",
+        model="stable-diffusion-3.5-large",
+        prompt=f"Absurdist digital painting: {text[:200]}",
         n=1,
         size="1024x1024"
     )
+    
+    # The response format will depend on the model; 
+    # typically provides a URL or b64_json
     return {"image_url": response.data[0].url}
