@@ -3,9 +3,9 @@ region: sfo
 services:
 - name: generator-api
   github:
-    repo: alston808/blog-image-gen  # Replace with your repo
+    repo: alston808/blog-image-gen
     branch: main
-  instance_size_slug: basic-xs # $5/month tier
+  instance_size_slug: basic-xs
   instance_count: 1
   build_command: pip install -r requirements.txt
   run_command: uvicorn app:app --host 0.0.0.0 --port 8080
@@ -13,6 +13,9 @@ services:
   health_check:
     path: /health
   env:
-    - key: DIGITALOCEAN_API_KEY
+    - key: FAL_KEY
       scope: RUN_TIME
-      value: ${DIGITALOCEAN_API_KEY} # Add this secret in DO Control Panel
+      value: ${FAL_KEY}
+    - key: CLI_TOKEN
+      scope: RUN_TIME
+      value: ${CLI_TOKEN}
