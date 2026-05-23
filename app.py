@@ -1,23 +1,26 @@
-from fastapi import FastAPI, Header, HTTPException
-import fal_client
-import os
+import click
+import requests
 
-app = FastAPI()
+# This must match the CLI_TOKEN you set in the DO Control Panel
+CLI_TOKEN = "your-secure-token-here"
+API_URL = "https://blog-image-gen-xxxxx.ondigitalocean.app/generate" # Update with your live URL
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+@click.command()
+@click.argument('file_path', type=click.Path(exists=True))
+def run(file_path):
+    with open(file_path, 'r') as f:
+        text = f.read()
 
-@app.post("/generate")
-async def generate_image(text: str, x_api_key: str = Header(...)):
-    # Validate the token sent by your CLI
-    if x_api_key != os.getenv("CLI_TOKEN"):
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    
-    # Generate image via Fal
-    handler = fal_client.submit(
-        "fal-ai/flux/schnell",
-        arguments={"prompt": f"Absurdist digital painting: {text[:200]}"}
+    response = requests.post(
+        API_URL,
+        json={"text": text},
+        headers={"X-API-Key": CLI_TOKEN}
     )
-    result = handler.get()
-    return {"image_url": result['images'][0]['url']}
+    
+    if response.status_code == 200:
+        click.echo(f"Success! Image URL: {response.json()['image_url']}")
+    else:
+        click.echo(f"Failed with status {response.status_code}: {response.text}")
+
+if __name__ == '__main__':
+    run()
