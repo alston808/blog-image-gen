@@ -1,26 +1,26 @@
-import click
-import requests
+import os
+from fastapi import FastAPI, Header, HTTPException
+from openai import OpenAI
 
-# This must match the CLI_TOKEN you set in the DO Control Panel
-CLI_TOKEN = "your-secure-token-here"
-API_URL = "https://blog-image-gen-xxxxx.ondigitalocean.app/generate" # Update with your live URL
+app = FastAPI()
 
-@click.command()
-@click.argument('file_path', type=click.Path(exists=True))
-def run(file_path):
-    with open(file_path, 'r') as f:
-        text = f.read()
+# DigitalOcean Inference Endpoint
+# Set AGENT_ENDPOINT in App Platform Env Vars
+client = OpenAI(
+    base_url=os.getenv("DO_INFERENCE_ENDPOINT") + "/api/v1/",
+    api_key=os.getenv("DO_INFERENCE_TOKEN")
+)
 
-    response = requests.post(
-        API_URL,
-        json={"text": text},
-        headers={"X-API-Key": CLI_TOKEN}
-    )
+@app.post("/generate-header")
+async def generate_header(prompt: str, x_api_key: str = Header(...)):
+    if x_api_key != os.getenv("CLI_TOKEN"):
+        raise HTTPException(status_code=403, detail="Unauthorized")
     
-    if response.status_code == 200:
-        click.echo(f"Success! Image URL: {response.json()['image_url']}")
-    else:
-        click.echo(f"Failed with status {response.status_code}: {response.text}")
-
-if __name__ == '__main__':
-    run()
+    # Generate image using DO Inference Engine
+    response = client.images.generate(
+        model="dall-e-3", # Use your catalog-supported model
+        prompt=f"Absurdist digital painting style: {prompt}",
+        n=1,
+        size="1024x1024"
+    )
+    return {"image_url": response.data[0].url}
